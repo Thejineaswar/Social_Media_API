@@ -13,5 +13,7 @@ public interface FollowDAO extends CrudRepository<Follow,Long>{
     Integer countByFollowedUser(SmUser user);
     Integer countByFollower(String username);
 
+    Follow findByFollowedUserAndFollower(SmUser user, String Follower);
+
     List<SmUser> findByFollower(String username);
 }

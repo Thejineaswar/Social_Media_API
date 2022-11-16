@@ -8,12 +8,15 @@ import com.example.socialmedia.repository.FollowDAO;
 import com.example.socialmedia.repository.SmUserDAO;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
+import java.util.Map;
 
 @AllArgsConstructor
 @RestController
@@ -46,6 +49,23 @@ public class FollowController {
         return ResponseEntity.ok("Current user now follows " + followRequest.getTo_follow());
     }
 
+    @DeleteMapping(value="/unfollow")
+    public ResponseEntity unfollow(@RequestBody Map<String, Object> payload){
+        String curr_user = SecurityContextHolder.getContext().getAuthentication().getName(); // follower
+        if(payload.containsKey("username")){
+            try{
+                String to_unfollow = (String) payload.get("username");
+                SmUser unfollow_user = smUserDAO.findByUsername(to_unfollow);
+                Follow followEntity = followDAO.findByFollowedUserAndFollower(unfollow_user,curr_user);
+                followDAO.deleteById(followEntity.getId());
+                return ResponseEntity.ok().body("Unfollow operation successful");
+            }catch (Exception e){
+                return ResponseEntity.internalServerError().body("Unfollow operation not successful");
+            }
+        }else{
+            return ResponseEntity.status(400).body("Include 'username' in json body");
+        }
+    }
 
     @PostMapping(value = "/followerDetails")
     public ResponseEntity followerDetails(@RequestBody FollowRequest followRequest){
